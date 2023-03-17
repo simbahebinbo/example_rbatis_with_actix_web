@@ -9,8 +9,11 @@ use crate::model::User;
 #[derive(OpenApi)]
 #[openapi(
 paths(
-user_controller::save,
-user_controller::update
+user_controller::user_save,
+user_controller::user_update,
+user_controller::user_list,
+user_controller::user_show,
+user_controller::user_delete
 ),
 components(
 schemas(User, common::ApiResult < User >, common::ApiResultErr)
