@@ -8,6 +8,7 @@ pub struct ApiResult<'a, T> {
     pub message: &'a str,
     pub data: T,
 }
+
 #[derive(Debug, Clone, Serialize, AllArgsConstructor, ToSchema)]
 pub struct ApiResultErr<'a> {
     pub code: u16,

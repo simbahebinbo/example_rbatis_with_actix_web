@@ -1,14 +1,14 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use error_chain::error_chain;
 use rbatis::Rbatis;
 use rbdc_mysql::driver::MysqlDriver;
 use tracing_subscriber::{filter, fmt, prelude::*, reload};
 
+use crate::controller::{openapi, user_controller};
+
 mod common;
 mod controller;
 mod model;
-
-use crate::controller::{openapi, user_controller};
 
 error_chain! {
     foreign_links {
@@ -25,13 +25,22 @@ async fn main() -> Result<()> {
         .with(fmt::Layer::default())
         .init();
 
+    let db_username = "pig";
+    let db_password = "123456";
+    let db_host = "127.0.0.1";
+    let db_port = 3306;
+    let db_schema = "example";
+    let db_url = format!("mysql://{}:{}@{}:{}/{}", db_username, db_password, db_host, db_port, db_schema);
     let rb = Rbatis::new();
-    rb.init(MysqlDriver {}, "mysql://root:root@localhost:3306/trauma")
+    rb.init(MysqlDriver {}, &db_url)
         .unwrap();
 
     let state = common::AppState { pool: rb };
 
-    tracing::info!("Server is running on http://{}:{}", "127.0.0.1", 9991);
+    let server_host = "127.0.0.1";
+    let server_port = 9991;
+
+    tracing::info!("Server is running on http://{}:{}", server_host, server_port);
 
     let server = HttpServer::new(move || {
         App::new()
@@ -39,9 +48,9 @@ async fn main() -> Result<()> {
             .configure(user_controller::register_routes)
             .configure(openapi::init)
     })
-    .workers(5)
-    .bind(("127.0.0.1", 9991))?
-    .run();
+        .workers(5)
+        .bind((server_host, server_port))?
+        .run();
 
     _ = server.await;
 
@@ -51,3 +60,4 @@ async fn main() -> Result<()> {
 pub fn register_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(controller::api_routes());
 }
+
